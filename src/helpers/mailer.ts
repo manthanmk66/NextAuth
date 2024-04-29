@@ -1,46 +1,38 @@
 import nodemailer from "nodemailer";
 import User from "@/models/userModel";
 import bcryptjs from "bcryptjs";
-require("dotenv").config();
 
 export const sendEmail = async ({ email, emailType, userId }: any) => {
   try {
-    //create a hashed token
+    // create a hased token
     const hashedToken = await bcryptjs.hash(userId.toString(), 10);
 
     if (emailType === "VERIFY") {
-      await User.findByIdAndUpdate(
-        userId,
-        {
-          verifyToken: hashedToken,
-          resetPasswordExpires: Date.now() + 36000000,
-        },
-        { new: true, runValidators: true }
-      );
+      await User.findByIdAndUpdate(userId, {
+        verifyToken: hashedToken,
+        verifyTokenExpiry: Date.now() + 3600000,
+      });
     } else if (emailType === "RESET") {
-      await User.findByIdAndUpdate(
-        userId,
-        {
-          forgotPasswordToken: hashedToken,
-          forgotPasswordTokenExpiry: Date.now() + 300000,
-        },
-        { new: true, runValidators: true }
-      );
+      await User.findByIdAndUpdate(userId, {
+        forgotPasswordToken: hashedToken,
+        forgotPasswordTokenExpiry: Date.now() + 3600000,
+      });
     }
 
-    const transport = nodemailer.createTransport({
+    var transport = nodemailer.createTransport({
       host: "sandbox.smtp.mailtrap.io",
       port: 2525,
       auth: {
-        user: `${process.env.USER}`,
-        pass: `${process.env.PASSWORD}`,
+        user: process.env.USER,
+        pass: process.env.PASSWORD,
       },
     });
 
     const mailOptions = {
-      from: "manthankasle66@gmail.com",
+      from: "manthan@gmail.com",
       to: email,
-      subject: "Reset Your Password",
+      subject:
+        emailType === "VERIFY" ? "Verify your email" : "Reset your password",
       html: `<p>Click <a href="${
         process.env.DOMAIN
       }/verifyemail?token=${hashedToken}">here</a> to ${
@@ -53,7 +45,7 @@ export const sendEmail = async ({ email, emailType, userId }: any) => {
     };
 
     const mailresponse = await transport.sendMail(mailOptions);
-    console.log("Email sent:", mailresponse);
+    return mailresponse;
   } catch (error: any) {
     throw new Error(error.message);
   }
