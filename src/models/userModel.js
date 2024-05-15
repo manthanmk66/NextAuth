@@ -15,6 +15,14 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: [true, "Please provide a password"],
     },
+    department: {
+        type: String,
+        required: [true, "Please provide a Department"],
+    },
+    mobile: {
+        type: String,
+        required: [true, "Please provide a Mobile Number"],
+    },
     isVerfied: {
         type: Boolean,
         default: false,
